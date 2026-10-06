@@ -109,6 +109,8 @@ python demo/RS-FS.py        # run
 python demo/RS-FS.py plot   # plot
 python demo/Zerlaut_et_al_2019.py        # RecExc/RecInh/DsInh network (Zerlaut et al., 2019)
 python demo/Zerlaut_et_al_2019.py plot
+python demo/PV-SST-VIP.py               # same network, RecInh split into PvInh/SstInh, DsInh -> VipInh
+python demo/PV-SST-VIP.py plot
 ```
 
 ## Tests
