@@ -107,6 +107,8 @@ snd.equations.channel('AMPA')     # dg_AMPA/dt = -g_AMPA/tau_AMPA ; I_AMPA = g_A
 ```
 python demo/RS-FS.py        # run
 python demo/RS-FS.py plot   # plot
+python demo/Zerlaut_et_al_2019.py        # RecExc/RecInh/DsInh network (Zerlaut et al., 2019)
+python demo/Zerlaut_et_al_2019.py plot
 ```
 
 ## Tests
