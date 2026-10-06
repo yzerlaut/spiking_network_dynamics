@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spiking-network-dynamics"
+version = "0.1.0"
+description = "Layers on top of brian2 for spiking network models"
+requires-python = ">=3.9"
+dependencies = ["brian2>=2.5", "numpy", "h5py"]
+
+[project.optional-dependencies]
+plot = ["matplotlib"]
+test = ["pytest"]
+
+[tool.setuptools]
+packages = ["snd"]
