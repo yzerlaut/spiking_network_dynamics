@@ -1,10 +1,8 @@
 """
 Recurrent network of excitatory (RecExc), inhibitory (RecInh) and
 disinhibitory (DsInh) LIF neurons, driven by a step-like afferent excitation
-targeting all three populations (Zerlaut et al., 2019, Figure 3).
-Port of `notebook_papers/sparse_vs_balanced/demo_Fig3.py`
-(`neural_network_dynamics/demo/from_papers/Zerlaut_et_al_2019.py` lacks the
-afferent drive onto RecInh).
+targeting RecExc and DsInh (Zerlaut et al., 2019).
+Port of `neural_network_dynamics/demo/from_papers/Zerlaut_et_al_2019.py`.
 
     python demo/Zerlaut_et_al_2019.py         # run, save to data/Zerlaut_et_al_2019.h5
     python demo/Zerlaut_et_al_2019.py plot    # plot
@@ -21,7 +19,7 @@ import snd
 LIF = dict(gL=10*nS, C=200*pF, tref=5*ms, EL=-70*mV, Vr=-70*mV)
 
 Model = {
-    'dt': 0.1*ms, 'tstop': 3200*ms, 'seed': 3,
+    'dt': 0.1*ms, 'tstop': 3000*ms, 'seed': 3,
 
     'channels': {'AMPA': dict(kind='exp', E=0*mV, tau=5*ms),
                  'GABA': dict(kind='exp', E=-80*mV, tau=5*ms)},
@@ -44,7 +42,6 @@ Model = {
         ('RecInh', 'RecInh'): dict(channel='GABA', w=10*nS, indegree=50),
         ('DsInh', 'RecInh'): dict(channel='GABA', w=10*nS, indegree=25),
         ('AffExc', 'RecExc'): dict(channel='AMPA', w=4*nS, indegree=10),
-        ('AffExc', 'RecInh'): dict(channel='AMPA', w=4*nS, indegree=10),
         ('AffExc', 'DsInh'): dict(channel='AMPA', w=4*nS, indegree=7.5),
     },
 
