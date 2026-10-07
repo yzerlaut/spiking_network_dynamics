@@ -135,3 +135,38 @@ def test_scan(tmp_path):
     S = snd.scan.load(str(tmp_path/'scan'))
     assert len(S['values']) == 4
     assert snd.io.load(files[1])['model']['seed'] == 2
+
+
+# ---------- plot ---------- #
+
+def test_vm_trace_spikes_and_clip():
+    M = small_model()
+    M['tstop'] = 500*ms
+    M['afferents']['AffExc']['rate'] = 20*Hz
+    _, data = snd.run(M)
+    sp, state = data['Exc_spikes'], data['Exc_state']
+    k = int(np.argmax([np.sum(sp['i'] == n) for n in state['record']]))
+    tspikes = sp['t'][sp['i'] == state['record'][k]]/ms
+    assert len(tspikes) > 0
+    t, V, segments = snd.plot.vm_trace(data, 'Exc', k, spike_peak=0*mV, clip=True)
+    assert len(segments) == len(tspikes)
+    for ts, v0, peak in segments:
+        i = np.searchsorted(t, ts+1e-6)-1
+        assert v0 < -40 and peak == 0      # V before reset, below Vcut
+        assert np.all(np.isnan(V[i+1:i+50]))  # 5ms clipped (tref)
+        if i+50 < len(V):
+            assert not np.isnan(V[i+50])
+
+
+def test_membrane_potential_subplots():
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    _, data = snd.run(small_model())
+    fig, AX = plt.subplots(2, 1)
+    snd.plot.membrane_potential_subplots(data, AX, ['Exc', 'Inh'],
+                                         spike_peak=-10*mV, clip=5*ms,
+                                         tzoom=(50*ms, 150*ms))
+    assert len(AX[0].lines) >= 2           # 2 recorded neurons
+    assert 'not recorded' in AX[1].texts[0].get_text()
+    plt.close(fig)

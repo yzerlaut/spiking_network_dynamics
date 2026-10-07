@@ -8,8 +8,9 @@ spiking_network_dynamics (snd) -- layers on top of brian2
 
   io       : save/load data and models with units (HDF5)
   scan     : parameter scans
+  plot     : plots of simulation data (takes matplotlib axes)
   legacy   : conversion of `neural_network_dynamics` (ntwk) model dictionaries
 """
-from . import equations, cells, synapses, inputs, record, io, model, scan, legacy
+from . import equations, cells, synapses, inputs, record, io, model, scan, legacy, plot
 from .model import build, run
 from .describe import describe

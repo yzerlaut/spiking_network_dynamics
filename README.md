@@ -16,7 +16,8 @@ so that you can drop down to brian2 code at any point.
 | 3 | `snd.build` / `snd.run` | network from a model description | `brian2.Network` |
 
 plus `snd.io` (save/load with units, HDF5), `snd.scan` (parameter scans),
-`snd.describe(net)` (print the brian2 content of a network) and
+`snd.describe(net)` (print the brian2 content of a network),
+`snd.plot` (plots of simulation data, e.g. `membrane_potential_subplots`) and
 `snd.legacy.from_ntwk` (convert `neural_network_dynamics` model dictionaries).
 
 ## Installation
