@@ -126,6 +126,18 @@ def test_explicit_afferent():
     assert np.all(np.bincount(net['AffExc_to_Exc'].j[:]) == 50)
 
 
+def test_spike_times_afferent():
+    M = small_model()
+    M['afferents']['Stim'] = dict(N=2, indices=[0, 1], times=[50, 100]*ms)
+    M['projections'][('Stim', 'Exc')] = dict(channel='AMPA', w=100*nS,
+                                             i=[0, 0, 1], j=[3, 4, 5])
+    M['record']['Stim'] = dict(spikes=True)
+    net, data = snd.run(M)
+    assert isinstance(net['Stim'], b2.SpikeGeneratorGroup)
+    assert list(net['Stim_to_Exc'].j[:]) == [3, 4, 5]
+    assert len(data['Stim_spikes']['t']) == 2
+
+
 def test_scan(tmp_path):
     M = small_model()
     M['tstop'] = 20*ms
@@ -156,6 +168,22 @@ def test_vm_trace_spikes_and_clip():
         assert np.all(np.isnan(V[i+1:i+50]))  # 5ms clipped (tref)
         if i+50 < len(V):
             assert not np.isnan(V[i+50])
+
+
+def test_thin_spikes():
+    i = np.array([0, 1, 0, 0, 1, 0])
+    t = np.array([0, 5, 50, 120, 300, 210])*ms
+    keep = snd.plot.thin_spikes(i, t, dead_time=100*ms)
+    assert list(keep) == [True, True, False, True, True, False]
+    keep = snd.plot.thin_spikes(i, t, dead_time=100*ms, subsampling=2)
+    assert list(keep) == [True, False, False, True, False, False]
+    # random order: kept spikes separated by more than dead_time, and no time
+    # bias (uniform kept density for a regular train)
+    t = np.arange(0, 100000, 1.)*ms
+    keep = snd.plot.thin_spikes(np.zeros(len(t)), t, dead_time=100*ms,
+                                random=True, seed=1)
+    assert np.all(np.diff(t[keep]/ms) >= 100)
+    assert np.sum(keep[:50000]) == pytest.approx(np.sum(keep[50000:]), rel=0.05)
 
 
 def test_membrane_potential_subplots():

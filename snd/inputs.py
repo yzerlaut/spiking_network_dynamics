@@ -14,7 +14,10 @@ Two kinds of afferent input:
    (`brian2.PoissonGroup`), to be connected with `synapses.projection`
    (shared input, recordable spikes).
 
-Explicit spike times: use `brian2.SpikeGeneratorGroup` directly.
+and explicit spike times:
+
+ - `spike_times`: a `brian2.SpikeGeneratorGroup`, to be connected with
+   `synapses.projection` (e.g. stimulation patterns).
 
 Time-varying rates are given either as a `brian2.TimedArray` or as an array
 of rates sampled every `dt`.
@@ -72,3 +75,12 @@ def poisson_population(name, N, rate, dt=None):
         return b2.PoissonGroup(N, rates=rate, name=name)
     return b2.PoissonGroup(N, rates='rate(t)', name=name,
                            namespace={'rate': timed_array(rate, dt)})
+
+
+def spike_times(name, N, indices, times):
+    """
+    brian2.SpikeGeneratorGroup of N neurons, neuron indices[k] firing at
+    times[k]
+    """
+    return b2.SpikeGeneratorGroup(N, np.asarray(indices, dtype=int), times,
+                                  name=name)

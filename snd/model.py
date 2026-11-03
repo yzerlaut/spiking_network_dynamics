@@ -21,6 +21,8 @@ so that it can be saved, copied and scanned:
             # explicit=False: independent Poisson drive (see inputs.poisson_drive)
             # explicit=True : PoissonGroup connected with synapses.projection
             'AffExc': dict(N=400, rate=5*Hz),
+            # explicit spike times: SpikeGeneratorGroup (see inputs.spike_times)
+            'Stim': dict(N=10, indices=[0, 1, ...], times=[10, 12, ...]*ms),
         },
 
         'projections': {
@@ -59,7 +61,10 @@ def build(Model):
 
     afferents = Model.get('afferents', {})
     for name, spec in afferents.items():
-        if spec.get('explicit', False):
+        if 'times' in spec:
+            groups[name] = inputs.spike_times(name, spec['N'],
+                                              spec['indices'], spec['times'])
+        elif spec.get('explicit', False):
             groups[name] = inputs.poisson_population(
                 name, spec['N'], spec['rate'],
                 dt=spec.get('rate_dt', Model['dt']))
@@ -69,7 +74,7 @@ def build(Model):
     for (pre, post), spec in Model.get('projections', {}).items():
         spec = dict(spec)
         name = spec.pop('name', '%s_to_%s' % (pre, post))
-        if (pre in afferents) and not afferents[pre].get('explicit', False):
+        if (pre in afferents) and (pre not in groups):
             if set(spec)-{'channel', 'w', 'indegree', 'p_release'} or \
                     ('indegree' not in spec):
                 raise ValueError("drive '%s' (afferent '%s' not explicit) accepts "
