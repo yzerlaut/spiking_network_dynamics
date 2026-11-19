@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "spiking-network-dynamics"
 version = "0.1.0"
 description = "Layers on top of brian2 for spiking network models"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["brian2>=2.5", "numpy", "h5py"]
 
 [project.optional-dependencies]
@@ -15,3 +15,7 @@ test = ["pytest"]
 
 [tool.setuptools]
 packages = ["snd"]
+
+[dependency-groups]
+# installed by default by `uv run` / `uv sync` (demos and tests)
+dev = ["matplotlib", "pytest"]

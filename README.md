@@ -113,6 +113,8 @@ python demo/Zerlaut_et_al_2019.py        # RecExc/RecInh/DsInh network (Zerlaut 
 python demo/Zerlaut_et_al_2019.py plot
 python demo/PV-SST-VIP.py               # same network, RecInh split into PvInh/SstInh, DsInh -> VipInh
 python demo/PV-SST-VIP.py plot
+python demo/mini-network.py             # 7 cells (5 Exc, 2 Inh), explicit connectivity, each fired once by a current step
+python demo/mini-network.py plot        # stacked Vm traces showing the PSPs
 ```
 
 ## Tests
