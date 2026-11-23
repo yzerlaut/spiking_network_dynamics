@@ -192,7 +192,7 @@ def stacked_membrane_potentials(data, ax, traces,
     Vbar   : size of the vertical scale bar (None: no bar)
     Tbar   : size of the horizontal (time) scale bar, replacing the time axis
              (None: keep the time axis)
-    bar_loc: location of the scale bars, 'bottom left' or 'top left'
+    bar_loc: location of the scale bars (see `scale_bars`)
     labels : write the population name at the right of each trace
     (other arguments as in `membrane_potential_subplots`)
     """
@@ -230,12 +230,12 @@ def stacked_membrane_potentials(data, ax, traces,
 def scale_bars(ax, Vbar=10*mV, Tbar=None, Vunit=mV, loc='bottom left'):
     """
     replace the y-axis (and the x-axis if `Tbar` is given) of `ax` by scale
-    bars at the left corners (axis units: `Vunit` and ms)
+    bars at a corner (axis units: `Vunit` and ms)
 
     Vbar  : size of the vertical bar (None: no bar), e.g. 10*mV or 1*Hz
     Tbar  : size of the horizontal (time) bar (None: keep the time axis)
     Vunit : unit of the y-axis data (e.g. mV, Hz)
-    loc   : 'bottom left' or 'top left'
+    loc   : 'bottom left', 'top left', 'bottom right' or 'top right'
     """
     for side in ['left', 'right', 'top']:
         ax.spines[side].set_visible(False)
@@ -246,21 +246,25 @@ def scale_bars(ax, Vbar=10*mV, Tbar=None, Vunit=mV, loc='bottom left'):
         ax.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
 
     (t0, t1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
-    if loc not in ['bottom left', 'top left']:
-        raise ValueError("loc should be 'bottom left' or 'top left'")
-    top = (loc == 'top left')
-    xbar = t0-0.01*(t1-t0)
-    ybar = y1 if top else y0  # corner of the bars
+    corners = ['bottom left', 'top left', 'bottom right', 'top right']
+    if loc not in corners:
+        raise ValueError('loc should be one of %s' % corners)
+    top, right = loc.startswith('top'), loc.endswith('right')
+    # corner of the bars, just outside the data range
+    xbar = t1+0.01*(t1-t0) if right else t0-0.01*(t1-t0)
+    ybar = y1 if top else y0
+    side = -1 if right else 1  # direction of the time bar
     if Vbar is not None:
         Vbar = float(Vbar/Vunit)
         yV = ybar-Vbar if top else ybar  # bottom of the vertical bar
         ax.plot([xbar, xbar], [yV, yV+Vbar], 'k-', lw=1.5, clip_on=False)
-        ax.annotate('%g%s ' % (Vbar, Vunit), (xbar, yV+Vbar/2), ha='right', va='center',
-                    annotation_clip=False)
+        ax.annotate((' %g%s' if right else '%g%s ') % (Vbar, Vunit),
+                    (xbar, yV+Vbar/2), ha='left' if right else 'right',
+                    va='center', annotation_clip=False)
     if Tbar is not None:
         Tbar = float(Tbar/ms)
-        ax.plot([xbar, xbar+Tbar], [ybar, ybar], 'k-', lw=1.5, clip_on=False)
-        ax.annotate('%gms' % Tbar, (xbar+Tbar/2, ybar),
+        ax.plot([xbar, xbar+side*Tbar], [ybar, ybar], 'k-', lw=1.5, clip_on=False)
+        ax.annotate('%gms' % Tbar, (xbar+side*Tbar/2, ybar),
                     ha='center', va='bottom' if top else 'top',
                     xytext=(0, 3 if top else -3), textcoords='offset points',
                     annotation_clip=False)

@@ -15,7 +15,9 @@ CHANNELS = {'AMPA': dict(kind='exp', E=0*mV, tau=5*ms),
 
 @pytest.mark.parametrize('kind, params', [('exp', dict(tau=5*ms)),
                                           ('alpha', dict(tau=5*ms)),
-                                          ('biexp', dict(tau_rise=1*ms, tau_decay=8*ms))])
+                                          ('biexp', dict(tau_rise=1*ms, tau_decay=8*ms)),
+                                          ('nmda', dict(tau_rise=2*ms, tau_decay=80*ms,
+                                                        Mg=1*b2.mM))])
 def test_channel_peak_equals_weight(kind, params):
     b2.defaultclock.dt = 0.01*ms
     G = snd.cells.population('G', 1, kind='LIF', params=dict(VT=100*mV),
@@ -25,6 +27,18 @@ def test_channel_peak_equals_weight(kind, params):
     M = b2.StateMonitor(G, 'g_X', record=0)
     b2.Network(G, src, S, M).run(40*ms)
     assert float(M.g_X[0].max()/nS) == pytest.approx(2., rel=1e-2)
+
+
+def test_nmda_mg_block():
+    """ NMDA current blocked at rest, (mostly) unblocked when depolarized """
+    b2.defaultclock.dt = 0.1*ms
+    G = snd.cells.population('G', 2, kind='LIF', params=dict(VT=100*mV),
+                             channels={'NMDA': dict(kind='nmda', E=0*mV, Mg=1*b2.mM,
+                                                    tau_rise=2*ms, tau_decay=80*ms)})
+    G.g_NMDA = 1*nS
+    G.V = [-70, -10]*mV
+    ratio = np.asarray(G.I_NMDA[:]/(G.g_NMDA[:]*(0*mV-G.V[:])))  # unblocked fraction
+    assert ratio[0] < 0.1 and ratio[1] > 0.5
 
 
 # ---------- layer 2 ---------- #
@@ -112,6 +126,19 @@ def test_build_run_save(tmp_path):
     assert 'g_AMPA' in snd.describe(net, show=False)
 
 
+def test_labelled_projections(tmp_path):
+    """ (pre, post, label) keys: several projections between the same populations """
+    M = small_model()
+    M['channels'] = dict(CHANNELS, NMDA=dict(kind='nmda', E=0*mV, Mg=1*b2.mM,
+                                             tau_rise=2*ms, tau_decay=80*ms))
+    M['projections'][('Exc', 'Exc', 'NMDA')] = dict(channel='NMDA', w=1*nS, indegree=10)
+    net, data = snd.run(M, filename=tmp_path/'sim.h5')
+    assert isinstance(net['Exc_to_Exc_NMDA'], b2.Synapses)
+    assert isinstance(net['Exc_to_Exc'], b2.Synapses)
+    out = snd.io.load(tmp_path/'sim.h5')
+    assert out['model']['projections'][('Exc', 'Exc', 'NMDA')]['indegree'] == 10
+
+
 def test_build_is_reproducible():
     _, d1 = snd.run(small_model())
     _, d2 = snd.run(small_model())
@@ -197,4 +224,20 @@ def test_membrane_potential_subplots():
                                          tzoom=(50*ms, 150*ms))
     assert len(AX[0].lines) >= 2           # 2 recorded neurons
     assert 'not recorded' in AX[1].texts[0].get_text()
+    plt.close(fig)
+
+
+@pytest.mark.parametrize('loc', ['bottom left', 'top left', 'bottom right', 'top right'])
+def test_scale_bars_corners(loc):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+    ax.plot([0, 100], [-70, -50])
+    snd.plot.scale_bars(ax, Vbar=10*mV, Tbar=20*ms, loc=loc)
+    (x0, x1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
+    xV = ax.lines[1].get_xdata()[0]  # vertical bar, outside the data range
+    assert (xV > x1) if loc.endswith('right') else (xV < x0)
+    yT = ax.lines[2].get_ydata()[0]  # time bar, at the top or bottom
+    assert yT == (y1 if loc.startswith('top') else y0)
     plt.close(fig)

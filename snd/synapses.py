@@ -29,7 +29,7 @@ def channels_of(group):
 
 def input_variable(group, channel):
     """ variable incremented by presynaptic events on `channel`, e.g. 'g_AMPA' """
-    for kind in ['alpha', 'exp']:  # 'x_' (alpha, biexp) before 'g_' (exp)
+    for kind in ['alpha', 'exp']:  # 'x_' (alpha, biexp, nmda) before 'g_' (exp)
         var = equations.channel_input(channel, kind)
         if var in group.variables:
             return var

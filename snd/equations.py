@@ -103,20 +103,30 @@ dg/dt = (norm*x - g)/tau_decay : siemens
 dx/dt = -x/tau_rise : siemens
 I = g*(E - V) : amp
 ''',
+
+    # 'biexp' conductance with the voltage-dependent Mg2+ block of NMDA
+    # receptors (Jahr & Stevens, 1990); the peak of g (unblocked) is w
+    'nmda': '''
+dg/dt = (norm*x - g)/tau_decay : siemens
+dx/dt = -x/tau_rise : siemens
+I = g*(E - V)/(1 + Mg/(3.57*mM)*exp(-0.062*V/mV)) : amp
+''',
 }
 
 # names local to each channel block (to be suffixed by the channel name)
 CHANNEL_NAMES = {'exp': ['g', 'I', 'E', 'tau'],
                  'alpha': ['g', 'x', 'I', 'E', 'tau'],
-                 'biexp': ['g', 'x', 'I', 'E', 'tau_rise', 'tau_decay', 'norm']}
+                 'biexp': ['g', 'x', 'I', 'E', 'tau_rise', 'tau_decay', 'norm'],
+                 'nmda': ['g', 'x', 'I', 'E', 'tau_rise', 'tau_decay', 'norm', 'Mg']}
 
 # parameters that have to be provided by the user
 CHANNEL_PARAMETERS = {'exp': ['E', 'tau'],
                       'alpha': ['E', 'tau'],
-                      'biexp': ['E', 'tau_rise', 'tau_decay']}
+                      'biexp': ['E', 'tau_rise', 'tau_decay'],
+                      'nmda': ['E', 'tau_rise', 'tau_decay', 'Mg']}
 
 # variable incremented by a presynaptic event (on_pre = '<var>_post += w')
-CHANNEL_INPUT = {'exp': 'g', 'alpha': 'x', 'biexp': 'x'}
+CHANNEL_INPUT = {'exp': 'g', 'alpha': 'x', 'biexp': 'x', 'nmda': 'x'}
 
 
 def channel(name, kind='exp'):
@@ -152,7 +162,7 @@ def channel_namespace(name, kind='exp', **params):
         raise ValueError("channel '%s' (kind '%s') expects %s, got %s" %
                          (name, kind, CHANNEL_PARAMETERS[kind], list(params)))
     namespace = {'%s_%s' % (key, name): val for key, val in params.items()}
-    if kind == 'biexp':
+    if kind in ['biexp', 'nmda']:
         namespace['norm_%s' % name] = biexp_norm(params['tau_rise'],
                                                  params['tau_decay'])
     return namespace

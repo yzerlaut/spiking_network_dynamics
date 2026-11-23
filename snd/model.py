@@ -28,6 +28,9 @@ so that it can be saved, copied and scanned:
         'projections': {
             ('Exc', 'Inh'): dict(channel='AMPA', w=1*nS, indegree=200),
             ('AffExc', 'Exc'): dict(channel='AMPA', w=1*nS, indegree=200),
+            # several projections between the same populations: (pre, post, label),
+            # e.g. co-released AMPA and NMDA (name '<pre>_to_<post>_<label>')
+            ('Exc', 'Exc', 'NMDA'): dict(channel='NMDA', w=1*nS, indegree=200),
             ...
         },
 
@@ -71,9 +74,10 @@ def build(Model):
 
     objects = list(groups.values())
 
-    for (pre, post), spec in Model.get('projections', {}).items():
+    for key, spec in Model.get('projections', {}).items():
+        pre, post = key[:2]
         spec = dict(spec)
-        name = spec.pop('name', '%s_to_%s' % (pre, post))
+        name = spec.pop('name', '_'.join(['%s_to_%s' % (pre, post)]+list(key[2:])))
         if (pre in afferents) and (pre not in groups):
             if set(spec)-{'channel', 'w', 'indegree', 'p_release'} or \
                     ('indegree' not in spec):
